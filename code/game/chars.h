@@ -33,7 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 //name
 #define CHARACTERISTIC_NAME							0	//string
 //gender of the bot
-#define CHARACTERISTIC_GENDER						1	//string ("male", "female", "it")
+#define CHARACTERISTIC_GENDER						1	//string ("male", "female", "other")
 //attack skill
 // >  0.0 && <  0.2 = don't move
 // >  0.3 && <  1.0 = aim at enemy during retreat

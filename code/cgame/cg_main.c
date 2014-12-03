@@ -553,6 +553,8 @@ void CG_RegisterUserCvars( void ) {
 
 		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "name"), name, userInfo[i] | CVAR_ARCHIVE );
 
+		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "gender"), "Not Specified", userInfo[i] | CVAR_ARCHIVE );
+
 		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "model"), modelNames[i], userInfo[i] | CVAR_ARCHIVE );
 		trap_Cvar_Register( NULL, Com_LocalPlayerCvarName(i, "headmodel"), headModelNames[i], userInfo[i] | CVAR_ARCHIVE );
 

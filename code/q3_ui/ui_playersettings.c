@@ -59,6 +59,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define ID_BACK			13
 #define ID_MODEL		14
 #define ID_EFFECTS2		15
+#define ID_GENDER		16
 
 #define MAX_NAMELENGTH	20
 
@@ -75,6 +76,7 @@ typedef struct {
 	menulist_s			handicap;
 	menulist_s			effects;
 	menulist_s			effects2;
+	menulist_s			gender;
 
 	menubitmap_s		back;
 	menubitmap_s		model;
@@ -119,6 +121,15 @@ static const char *handicap_items[] = {
 	NULL
 };
 
+#define NUMBER_OF_GENDERS	4
+
+static const char *gender_items[] = {
+	"Not Specified",
+	"Female",
+	"Male",
+	"Other",
+	NULL
+};
 
 /*
 =================
@@ -188,6 +199,31 @@ static void PlayerSettings_DrawHandicap( void *self ) {
 	UI_DrawProportionalString( item->generic.x + 64, item->generic.y + PROP_HEIGHT, handicap_items[item->curvalue], style, color );
 }
 
+
+/*
+=================
+PlayerSettings_DrawGender
+=================
+*/
+static void PlayerSettings_DrawGender( void *self ) {
+	menulist_s		*item;
+	qboolean		focus;
+	int				style;
+	float			*color;
+
+	item = (menulist_s *)self;
+	focus = (item->generic.parent->cursor == item->generic.menuPosition);
+
+	style = UI_LEFT|UI_SMALLFONT;
+	color = text_color_normal;
+	if( focus ) {
+		style |= UI_PULSE;
+		color = text_color_highlight;
+	}
+
+	UI_DrawProportionalString( item->generic.x, item->generic.y, "Gender", style, color );
+	UI_DrawProportionalString( item->generic.x + 64, item->generic.y + PROP_HEIGHT, gender_items[item->curvalue], style, color );
+}
 
 /*
 =================
@@ -301,6 +337,10 @@ static void PlayerSettings_SaveChanges( void ) {
 			uitogamecode[s_playersettings.effects.curvalue] );
 	trap_Cvar_SetValue( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "color2"),
 			uitogamecode[s_playersettings.effects2.curvalue] );
+
+	// gender
+	trap_Cvar_Set( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "gender"),
+			gender_items[s_playersettings.gender.curvalue] );
 }
 
 
@@ -327,6 +367,8 @@ static void PlayerSettings_SetMenuItems( void ) {
 	int		c;
 	int		h;
 	char	model[MAX_QPATH], headmodel[MAX_QPATH];
+	char*	g;
+	int		i;
 
 	// name
 	Q_strncpyz( s_playersettings.name.field.buffer, CG_Cvar_VariableString(
@@ -361,6 +403,18 @@ static void PlayerSettings_SetMenuItems( void ) {
 	// handicap
 	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "handicap")) );
 	s_playersettings.handicap.curvalue = 20 - h / 5;
+	
+	// gender
+	g = CG_Cvar_VariableString( Com_LocalPlayerCvarName(s_playersettings.localPlayerNum, "gender") );
+	i = 0;
+	for( i = 0; i < NUMBER_OF_GENDERS; i++ )
+	{
+		if(!Q_stricmp(g, gender_items[i])) {
+			s_playersettings.gender.curvalue = i;
+			return;
+		}
+	}
+	s_playersettings.gender.curvalue = 0;
 }
 
 
@@ -469,7 +523,7 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	s_playersettings.framer.width         = 256;
 	s_playersettings.framer.height        = 334;
 
-	y = 144;
+	y = 44;
 	s_playersettings.name.generic.type			= MTYPE_FIELD;
 	s_playersettings.name.generic.flags			= QMF_NODEFAULTINIT;
 	s_playersettings.name.generic.ownerdraw		= PlayerSettings_DrawName;
@@ -524,6 +578,20 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	s_playersettings.effects2.generic.bottom	= y + 2* PROP_HEIGHT;
 	s_playersettings.effects2.numitems			= NUM_COLOR_EFFECTS;
 
+	y += 3 * PROP_HEIGHT;
+	s_playersettings.gender.generic.type		= MTYPE_SPINCONTROL;
+	s_playersettings.gender.generic.flags		= QMF_NODEFAULTINIT;
+	s_playersettings.gender.generic.id			= ID_GENDER;
+	s_playersettings.gender.generic.ownerdraw	= PlayerSettings_DrawGender;
+	s_playersettings.gender.generic.statusbar	= PlayerSettings_StatusBar;
+	s_playersettings.gender.generic.x			= 192;
+	s_playersettings.gender.generic.y			= y;
+	s_playersettings.gender.generic.left		= 192 - 8;
+	s_playersettings.gender.generic.top			= y - 8;
+	s_playersettings.gender.generic.right		= 192 + 200;
+	s_playersettings.gender.generic.bottom		= y + 2 * PROP_HEIGHT;
+	s_playersettings.gender.numitems			= 4;
+
 	s_playersettings.model.generic.type			= MTYPE_BITMAP;
 	s_playersettings.model.generic.name			= ART_MODEL0;
 	s_playersettings.model.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
@@ -569,6 +637,7 @@ static void PlayerSettings_MenuInit( int localPlayerNum )
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.handicap );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.effects );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.effects2 );
+	Menu_AddItem( &s_playersettings.menu, &s_playersettings.gender );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.model );
 	Menu_AddItem( &s_playersettings.menu, &s_playersettings.back );
 

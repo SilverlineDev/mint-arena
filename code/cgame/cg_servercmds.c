@@ -821,10 +821,10 @@ voiceChatList_t *CG_VoiceChatListForPlayer( int playerNum ) {
 				}
 			}
 		}
-		// fall back to male gender because we don't have neuter in the mission pack
-		if (gender == GENDER_MALE)
+		// fall back to female gender because we don't have neuter in the mission pack
+		if (gender == GENDER_FEMALE)
 			break;
-		gender = GENDER_MALE;
+		gender = GENDER_FEMALE;
 	}
 	// store this head model with voice chat for future reference
 	for ( j = 0; j < MAX_HEADMODELS; j++ ) {

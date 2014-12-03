@@ -196,7 +196,7 @@ typedef struct bot_stringlist_s
 //chat state of a bot
 typedef struct bot_chatstate_s
 {
-	int gender;											//0=it, 1=female, 2=male
+	int gender;											//0=other, 1=female, 2=male
 	int playernum;										//player number
 	char name[32];										//name of the bot
 	char chatmessage[MAX_MESSAGE_SIZE];
@@ -1707,7 +1707,7 @@ void BotDumpReplyChat(bot_replychat_t *replychat)
 			if (key->flags & RCKFL_NAME) fprintf(fp, "name");
 			else if (key->flags & RCKFL_GENDERFEMALE) fprintf(fp, "female");
 			else if (key->flags & RCKFL_GENDERMALE) fprintf(fp, "male");
-			else if (key->flags & RCKFL_GENDERLESS) fprintf(fp, "it");
+			else if (key->flags & RCKFL_GENDERLESS) fprintf(fp, "other");
 			else if (key->flags & RCKFL_VARIABLES)
 			{
 				fprintf(fp, "(");
@@ -1931,7 +1931,7 @@ bot_replychat_t *BotLoadReplyChat(char *filename)
 			if (PC_CheckTokenString(source, "name")) key->flags |= RCKFL_NAME;
 			else if (PC_CheckTokenString(source, "female")) key->flags |= RCKFL_GENDERFEMALE;
 			else if (PC_CheckTokenString(source, "male")) key->flags |= RCKFL_GENDERMALE;
-			else if (PC_CheckTokenString(source, "it")) key->flags |= RCKFL_GENDERLESS;
+			else if (PC_CheckTokenString(source, "other")) key->flags |= RCKFL_GENDERLESS;
 			else if (PC_CheckTokenString(source, "(")) //match key
 			{
 				key->flags |= RCKFL_VARIABLES;
@@ -2640,7 +2640,7 @@ void BotPrintReplyChatKeys(bot_replychat_t *replychat)
 		if (key->flags & RCKFL_NAME) BotAI_Print(PRT_MESSAGE, "name");
 		else if (key->flags & RCKFL_GENDERFEMALE) BotAI_Print(PRT_MESSAGE, "female");
 		else if (key->flags & RCKFL_GENDERMALE) BotAI_Print(PRT_MESSAGE, "male");
-		else if (key->flags & RCKFL_GENDERLESS) BotAI_Print(PRT_MESSAGE, "it");
+		else if (key->flags & RCKFL_GENDERLESS) BotAI_Print(PRT_MESSAGE, "other");
 		else if (key->flags & RCKFL_VARIABLES)
 		{
 			BotAI_Print(PRT_MESSAGE, "(");
