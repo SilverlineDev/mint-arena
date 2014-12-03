@@ -93,6 +93,7 @@ typedef struct
 	kbutton_t	in_up, in_down;
 
 	kbutton_t	in_buttons[15];
+	kbutton_t	in_buttons2[16];
 
 	qboolean	in_mlooking;
 } clientInput_t;
@@ -385,6 +386,38 @@ void IN_Button13Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_b
 void IN_Button13Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[13]);}
 void IN_Button14Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons[14]);}
 void IN_Button14Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons[14]);}
+void IN_Button15Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[0]);}
+void IN_Button15Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[0]);}
+void IN_Button16Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[1]);}
+void IN_Button16Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[1]);}
+void IN_Button17Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[2]);}
+void IN_Button17Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[2]);}
+void IN_Button18Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[3]);}
+void IN_Button18Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[3]);}
+void IN_Button19Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[4]);}
+void IN_Button19Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[4]);}
+void IN_Button20Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[5]);}
+void IN_Button20Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[5]);}
+void IN_Button21Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[6]);}
+void IN_Button21Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[6]);}
+void IN_Button22Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[7]);}
+void IN_Button22Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[7]);}
+void IN_Button23Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[8]);}
+void IN_Button23Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[8]);}
+void IN_Button24Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[9]);}
+void IN_Button24Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[9]);}
+void IN_Button25Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[10]);}
+void IN_Button25Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[10]);}
+void IN_Button26Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[11]);}
+void IN_Button26Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[11]);}
+void IN_Button27Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[12]);}
+void IN_Button27Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[12]);}
+void IN_Button28Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[13]);}
+void IN_Button28Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[13]);}
+void IN_Button29Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[14]);}
+void IN_Button29Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[14]);}
+void IN_Button30Down( int localPlayerNum ) {IN_KeyDown(&cis[localPlayerNum].in_buttons2[15]);}
+void IN_Button30Up( int localPlayerNum ) {IN_KeyUp(&cis[localPlayerNum].in_buttons2[15]);}
 
 void IN_CenterView( int localPlayerNum ) {
 	playerState_t *ps;
@@ -528,6 +561,14 @@ void CG_CmdButtons( clientInput_t *ci, usercmd_t *cmd, qboolean anykeydown ) {
 			cmd->buttons |= 1 << i;
 		}
 		ci->in_buttons[i].wasPressed = qfalse;
+	}
+
+	// calculate button2 bits
+	for (i = 0 ; i < 16 ; i++) {
+		if ( ci->in_buttons2[i].active || ci->in_buttons2[i].wasPressed ) {
+			cmd->buttons2 |= 1 << i;
+		}
+		ci->in_buttons2[i].wasPressed = qfalse;
 	}
 
 	if ( trap_Key_GetCatcher( ) ) {

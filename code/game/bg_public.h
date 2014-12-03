@@ -423,6 +423,24 @@ usercmd_t->button bits definitions
 #define	MOVE_RUN			120			// if forwardmove or rightmove are >= MOVE_RUN,
 										// then BUTTON_WALKING should be set
 
+//Additional buttons
+
+#define	BUTTON_RELOAD		(1<<0)		// reload
+#define	BUTTON_USE			(1<<1)		// use
+#define	BUTTON_SPOT			(1<<2)		// spot target
+#define	BUTTON_FLASHLIGHT	(1<<3)		// flashlight
+#define	BUTTON_ALTFIRE		(1<<4)		// alt-fire
+#define	BUTTON_FIRESELECT	(1<<5)		// fire selection
+#define	BUTTON_PLACE6		(1<<6)		// placeholder
+#define	BUTTON_PLACE7		(1<<7)		// placeholder
+#define	BUTTON_PLACE8		(1<<8)		// placeholder
+#define	BUTTON_PLACE9		(1<<9)		// placeholder
+#define	BUTTON_PLACE10		(1<<10)		// placeholder
+#define	BUTTON_PLACE11		(1<<11)		// placeholder
+#define	BUTTON_PLACE12		(1<<12)		// placeholder
+#define	BUTTON_PLACE13		(1<<13)		// placeholder
+#define	BUTTON_PLACE14		(1<<14)		// placeholder
+#define	BUTTON_PLACE15		(1<<15)		// placeholder
 
 /*
 ===================================================================================

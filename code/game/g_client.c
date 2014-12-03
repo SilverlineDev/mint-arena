@@ -1180,6 +1180,7 @@ void PlayerSpawn(gentity_t *ent) {
 	player->respawnTime = level.time;
 	player->inactivityTime = level.time + g_inactivity.integer * 1000;
 	player->latched_buttons = 0;
+	player->latched_buttons2 = 0;
 
 	// set default animations
 	player->ps.torsoAnim = TORSO_STAND;

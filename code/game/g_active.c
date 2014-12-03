@@ -354,7 +354,9 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 	}
 
 	player->oldbuttons = player->buttons;
+	player->oldbuttons2 = player->buttons2;
 	player->buttons = ucmd->buttons;
+	player->buttons2 = ucmd->buttons2;
 
 	// attack button cycles through spectators
 	if ( ( player->buttons & BUTTON_ATTACK ) && ! ( player->oldbuttons & BUTTON_ATTACK ) ) {
@@ -521,7 +523,9 @@ void PlayerIntermissionThink( gplayer_t *player ) {
 
 	// swap and latch button actions
 	player->oldbuttons = player->buttons;
+	player->oldbuttons2 = player->buttons2;
 	player->buttons = player->pers.cmd.buttons;
+	player->buttons2 = player->pers.cmd.buttons2;
 	if ( player->buttons & ( BUTTON_ATTACK | BUTTON_USE_HOLDABLE ) & ( player->oldbuttons ^ player->buttons ) ) {
 		// this used to be an ^1 but once a player says ready, it should stick
 		player->readyToExit = 1;
@@ -917,6 +921,7 @@ void PlayerThink_real( gentity_t *ent ) {
 		if (level.intermissionQueued != 0 && g_singlePlayer.integer) {
 			if ( level.time - level.intermissionQueued >= 1000  ) {
 				pm.cmd.buttons = 0;
+				pm.cmd.buttons2 = 0;
 				pm.cmd.forwardmove = 0;
 				pm.cmd.rightmove = 0;
 				pm.cmd.upmove = 0;
@@ -978,8 +983,11 @@ void PlayerThink_real( gentity_t *ent ) {
 
 	// swap and latch button actions
 	player->oldbuttons = player->buttons;
+	player->oldbuttons2 = player->buttons2;
 	player->buttons = ucmd->buttons;
+	player->buttons2 = ucmd->buttons2;
 	player->latched_buttons |= player->buttons & ~player->oldbuttons;
+	player->latched_buttons2 |= player->buttons2 & ~player->oldbuttons2;
 
 	// check for respawning
 	if ( player->ps.stats[STAT_HEALTH] <= 0 ) {

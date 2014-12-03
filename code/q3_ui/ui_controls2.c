@@ -119,6 +119,12 @@ enum {
 	ID_WEAPON13,
 #endif
 	ID_ATTACK,
+	ID_RELOAD,
+	ID_USE,
+	ID_SPOT,
+	ID_FLASHLIGHT,
+	ID_ALTFIRE,
+	ID_FIRESELECT,
 	ID_WEAPPREV,
 	ID_WEAPNEXT,
 	ID_GESTURE,
@@ -214,6 +220,12 @@ typedef struct
 	menuaction_s		chaingun;
 #endif
 	menuaction_s		attack;
+	menuaction_s		reload;
+	menuaction_s		use;
+	menuaction_s		spot;
+	menuaction_s		flashlight;
+	menuaction_s		altfire;
+	menuaction_s		fireselect;
 	menuaction_s		prevweapon;
 	menuaction_s		nextweapon;
 	menuaction_s		lookup;
@@ -296,10 +308,16 @@ static bind_t g_bindings[] =
 	{"weapon 12",		"proximity mine",	ID_WEAPON12,	ANIM_WEAPON12,	-1,				-1,		-1, -1},
 	{"weapon 13",		"chain gun",		ID_WEAPON13,	ANIM_WEAPON13,	-1,				-1,		-1, -1},
 #endif
-	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,			-1,		-1, -1},
+	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_MOUSE1,		-1,		-1, -1},
+	{"+reload", 		"Reload",			ID_RELOAD,		ANIM_ATTACK,	K_MOUSE5,		-1,		-1, -1},
+	{"+use", 			"Use",				ID_USE,			ANIM_IDLE,		K_MOUSE3,		-1,		-1, -1},
+	{"+spot",	 		"Spot",				ID_SPOT,		ANIM_GESTURE,	-1,				-1,		-1, -1},
+	{"+flashlight", 	"Flashlight",		ID_FLASHLIGHT,	ANIM_IDLE,		'f',			-1,		-1, -1},
+	{"+altfire", 		"Alternate Fire",	ID_ALTFIRE,		ANIM_ATTACK,	'q',			-1,		-1, -1},
+	{"+fireselect", 	"Fire Selection",	ID_FIRESELECT,	ANIM_IDLE,		'x',			-1,		-1, -1},
 	{"weapprev",		"prev weapon",		ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
 	{"weapnext", 		"next weapon",		ID_WEAPNEXT,	ANIM_IDLE,		']',			-1,		-1, -1},
-	{"+button3", 		"gesture",			ID_GESTURE,		ANIM_GESTURE,	K_MOUSE3,		-1,		-1, -1},
+	{"+button3", 		"gesture",			ID_GESTURE,		ANIM_GESTURE,	-1,				-1,		-1, -1},
 	{"messagemode", 	"chat",				ID_CHAT,		ANIM_CHAT,		't',			-1,		-1, -1},
 	{"messagemode2", 	"chat - team",		ID_CHAT2,		ANIM_CHAT,		-1,				-1,		-1, -1},
 	{"messagemode3", 	"chat - target",	ID_CHAT3,		ANIM_CHAT,		-1,				-1,		-1, -1},
@@ -344,6 +362,12 @@ static bind_t g_bindings2[] =
 	MINIBIND(ID_WEAPON13, -1, -1),
 #endif
 	MINIBIND(ID_ATTACK, -1, -1),
+	MINIBIND(ID_RELOAD, -1, -1),
+	MINIBIND(ID_USE, -1, -1),
+	MINIBIND(ID_SPOT, -1, -1),
+	MINIBIND(ID_FLASHLIGHT, -1, -1),
+	MINIBIND(ID_ALTFIRE, -1, -1),
+	MINIBIND(ID_FIRESELECT, -1, -1),
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
 	MINIBIND(ID_GESTURE, -1, -1),
@@ -388,6 +412,12 @@ static bind_t g_bindings3[] =
 	MINIBIND(ID_WEAPON13, -1, -1),
 #endif
 	MINIBIND(ID_ATTACK, -1, -1),
+	MINIBIND(ID_RELOAD, -1, -1),
+	MINIBIND(ID_USE, -1, -1),
+	MINIBIND(ID_SPOT, -1, -1),
+	MINIBIND(ID_FLASHLIGHT, -1, -1),
+	MINIBIND(ID_ALTFIRE, -1, -1),
+	MINIBIND(ID_FIRESELECT, -1, -1),
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
 	MINIBIND(ID_GESTURE, -1, -1),
@@ -432,6 +462,12 @@ static bind_t g_bindings4[] =
 	MINIBIND(ID_WEAPON13, -1, -1),
 #endif
 	MINIBIND(ID_ATTACK, -1, -1),
+	MINIBIND(ID_RELOAD, -1, -1),
+	MINIBIND(ID_USE, -1, -1),
+	MINIBIND(ID_SPOT, -1, -1),
+	MINIBIND(ID_FLASHLIGHT, -1, -1),
+	MINIBIND(ID_ALTFIRE, -1, -1),
+	MINIBIND(ID_FIRESELECT, -1, -1),
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
 	MINIBIND(ID_GESTURE, -1, -1),
@@ -493,6 +529,10 @@ static menucommon_s *g_movement_controls[] =
 
 static menucommon_s *g_weapons_controls[] = {
 	(menucommon_s *)&s_controls.attack,           
+	(menucommon_s *)&s_controls.reload,
+	(menucommon_s *)&s_controls.altfire,
+	(menucommon_s *)&s_controls.fireselect,
+	(menucommon_s *)&s_controls.flashlight,
 	(menucommon_s *)&s_controls.nextweapon,
 	(menucommon_s *)&s_controls.prevweapon,
 	(menucommon_s *)&s_controls.autoswitch,    
@@ -527,6 +567,8 @@ static menucommon_s *g_looking_controls[] = {
 };
 
 static menucommon_s *g_misc_controls[] = {
+	(menucommon_s *)&s_controls.use,
+	(menucommon_s *)&s_controls.spot,
 	(menucommon_s *)&s_controls.showscores, 
 	(menucommon_s *)&s_controls.useitem,
 	(menucommon_s *)&s_controls.gesture,
@@ -563,6 +605,8 @@ static menucommon_s *g_looking_mini_controls[] = {
 };
 
 static menucommon_s *g_misc_mini_controls[] = {
+	(menucommon_s *)&s_controls.use,
+	(menucommon_s *)&s_controls.spot,
 	(menucommon_s *)&s_controls.showscores,
 	(menucommon_s *)&s_controls.useitem,
 	(menucommon_s *)&s_controls.gesture,
@@ -1814,6 +1858,42 @@ static void Controls_MenuInit( int localPlayerNum )
 	s_controls.attack.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.attack.generic.id        = ID_ATTACK;
 
+	s_controls.reload.generic.type	    = MTYPE_ACTION;
+	s_controls.reload.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.reload.generic.callback  = Controls_ActionEvent;
+	s_controls.reload.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.reload.generic.id        = ID_RELOAD;
+
+	s_controls.use.generic.type	     = MTYPE_ACTION;
+	s_controls.use.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.use.generic.callback  = Controls_ActionEvent;
+	s_controls.use.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.use.generic.id        = ID_USE;
+
+	s_controls.spot.generic.type	  = MTYPE_ACTION;
+	s_controls.spot.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.spot.generic.callback  = Controls_ActionEvent;
+	s_controls.spot.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.spot.generic.id        = ID_SPOT;
+
+	s_controls.flashlight.generic.type	    = MTYPE_ACTION;
+	s_controls.flashlight.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.flashlight.generic.callback  = Controls_ActionEvent;
+	s_controls.flashlight.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.flashlight.generic.id        = ID_FLASHLIGHT;
+
+	s_controls.altfire.generic.type	        = MTYPE_ACTION;
+	s_controls.altfire.generic.flags        = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.altfire.generic.callback     = Controls_ActionEvent;
+	s_controls.altfire.generic.ownerdraw    = Controls_DrawKeyBinding;
+	s_controls.altfire.generic.id           = ID_ALTFIRE;
+
+	s_controls.fireselect.generic.type	    = MTYPE_ACTION;
+	s_controls.fireselect.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.fireselect.generic.callback  = Controls_ActionEvent;
+	s_controls.fireselect.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.fireselect.generic.id        = ID_FIRESELECT;
+
 	s_controls.prevweapon.generic.type	    = MTYPE_ACTION;
 	s_controls.prevweapon.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.prevweapon.generic.callback  = Controls_ActionEvent;
@@ -2028,6 +2108,10 @@ static void Controls_MenuInit( int localPlayerNum )
 	Menu_AddItem( &s_controls.menu, &s_controls.sidestep );
 
 	Menu_AddItem( &s_controls.menu, &s_controls.attack );
+	Menu_AddItem( &s_controls.menu, &s_controls.reload );
+	Menu_AddItem( &s_controls.menu, &s_controls.flashlight );
+	Menu_AddItem( &s_controls.menu, &s_controls.altfire );
+	Menu_AddItem( &s_controls.menu, &s_controls.fireselect );
 	Menu_AddItem( &s_controls.menu, &s_controls.nextweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.prevweapon );
 	Menu_AddItem( &s_controls.menu, &s_controls.autoswitch );
@@ -2046,6 +2130,8 @@ static void Controls_MenuInit( int localPlayerNum )
 	Menu_AddItem( &s_controls.menu, &s_controls.chaingun );
 #endif
 
+	Menu_AddItem( &s_controls.menu, &s_controls.use );
+	Menu_AddItem( &s_controls.menu, &s_controls.spot );
 	Menu_AddItem( &s_controls.menu, &s_controls.showscores );
 	Menu_AddItem( &s_controls.menu, &s_controls.useitem );
 	Menu_AddItem( &s_controls.menu, &s_controls.gesture );
