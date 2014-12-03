@@ -994,10 +994,7 @@ static void PM_CrashLand( void ) {
 		if ( delta > 60 ) {
 			PM_AddEvent( EV_FALL_FAR );
 		} else if ( delta > 40 ) {
-			// this is a pain grunt, so don't play it if dead
-			if ( pm->ps->stats[STAT_HEALTH] > 0 ) {
-				PM_AddEvent( EV_FALL_MEDIUM );
-			}
+			PM_AddEvent( EV_FALL_MEDIUM );
 		} else if ( delta > 7 ) {
 			PM_AddEvent( EV_FALL_SHORT );
 		} else {

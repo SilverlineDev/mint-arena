@@ -631,8 +631,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_FALL_MEDIUM:
 		DEBUGNAME("EV_FALL_MEDIUM");
-		// use normal pain sound
-		trap_S_StartSound( NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*pain100_1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.landSound );
 		for (i = 0; i < CG_MaxSplitView(); i++) {
 			if ( playerNum == cg.snap->pss[i].playerNum ) {
 				// smooth landing z changes
@@ -643,8 +642,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_FALL_FAR:
 		DEBUGNAME("EV_FALL_FAR");
-		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*fall1.wav" ) );
-		cent->pe.painTime = cg.time;	// don't play a pain sound right after this
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.landSound );
 		for (i = 0; i < CG_MaxSplitView(); i++) {
 			if ( playerNum == cg.snap->pss[i].playerNum ) {
 				// smooth landing z changes

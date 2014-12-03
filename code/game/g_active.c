@@ -545,7 +545,6 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 	int		i;
 	int		event;
 	gplayer_t *player;
-	int		damage;
 	vec3_t	origin, angles;
 
 	player = ent->player;
@@ -557,23 +556,6 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 		event = player->ps.events[ i & (MAX_PS_EVENTS-1) ];
 
 		switch ( event ) {
-		case EV_FALL_MEDIUM:
-		case EV_FALL_FAR:
-			if ( ent->s.eType != ET_PLAYER ) {
-				break;		// not in the player model
-			}
-			if ( g_dmflags.integer & DF_NO_FALLING ) {
-				break;
-			}
-			if ( event == EV_FALL_FAR ) {
-				damage = 10;
-			} else {
-				damage = 5;
-			}
-			ent->pain_debounce_time = level.time + 200;	// no normal pain sound
-			G_Damage (ent, NULL, NULL, NULL, NULL, damage, 0, MOD_FALLING);
-			break;
-
 		case EV_FIRE_WEAPON:
 			FireWeapon( ent );
 			break;
