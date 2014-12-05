@@ -976,8 +976,15 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( knockback && targ->player ) {
 		vec3_t	kvel;
 		float	mass;
+		int		maxTime;
 
-		mass = 200;
+		if( targ->player->ps.stats[STAT_ARMOR] <= 0 ) {
+			mass = 100;
+			maxTime = 2000;
+		} else {
+			mass = 200;
+			maxTime = 50;
+		}
 
 		VectorScale (dir, g_knockback.value * (float)knockback / mass, kvel);
 		VectorAdd (targ->player->ps.velocity, kvel, targ->player->ps.velocity);
@@ -987,12 +994,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		if ( !targ->player->ps.pm_time ) {
 			int		t;
 
-			t = knockback * 2;
+			t = knockback * 20;
 			if ( t < 50 ) {
 				t = 50;
 			}
-			if ( t > 200 ) {
-				t = 200;
+			if ( t > maxTime ) {
+				t = maxTime;
 			}
 			targ->player->ps.pm_time = t;
 			targ->player->ps.pm_flags |= PMF_TIME_KNOCKBACK;
