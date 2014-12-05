@@ -1091,6 +1091,7 @@ Q3CGOBJ = \
   $(B)/$(BASEGAME)/ui/ui_team.o \
   $(B)/$(BASEGAME)/ui/ui_teamorders.o \
   $(B)/$(BASEGAME)/ui/ui_video.o \
+  $(B)/$(BASEGAME)/ui/ui_videos.o \
   \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
@@ -1190,7 +1191,8 @@ MPCGOBJ += \
   $(B)/$(MISSIONPACK)/q3ui/ui_startserver.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_team.o \
   $(B)/$(MISSIONPACK)/q3ui/ui_teamorders.o \
-  $(B)/$(MISSIONPACK)/q3ui/ui_video.o
+  $(B)/$(MISSIONPACK)/q3ui/ui_video.o \
+  $(B)/$(MISSIONPACK)/q3ui/ui_videos.o
 else
 MPCGOBJ += \
   $(B)/$(MISSIONPACK)/ui/ui_main.o \

@@ -801,7 +801,7 @@ void UI_Cache_f( void ) {
 //	UI_SaveConfigMenu_Cache();
 	UI_BotSelectMenu_Cache();
 	UI_ModsMenu_Cache();
-
+	UI_VideosMenu_Cache();
 }
 
 
