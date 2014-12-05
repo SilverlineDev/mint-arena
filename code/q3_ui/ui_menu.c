@@ -49,7 +49,8 @@ MAIN MENU
 #define ID_TEAMARENA			15
 #endif
 #define ID_MODS					16
-#define ID_EXIT					17
+#define ID_CREDITS				17
+#define ID_EXIT					18
 
 #define MAIN_BANNER_MODEL				"models/mapobjects/banner/banner5.md3"
 #define MAIN_MENU_VERTICAL_SPACING		34
@@ -67,6 +68,7 @@ typedef struct {
 	menutext_s		teamArena;
 #endif
 	menutext_s		mods;
+	menutext_s		credits;
 	menutext_s		exit;
 
 	qhandle_t		bannerModel;
@@ -91,8 +93,7 @@ static void MainMenu_ExitAction( qboolean result ) {
 	if( !result ) {
 		return;
 	}
-	UI_PopMenu();
-	UI_CreditMenu();
+	trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
 }
 
 
@@ -130,6 +131,10 @@ void Main_MenuEvent (void* ptr, int event) {
 
 	case ID_MODS:
 		UI_ModsMenu();
+		break;
+
+	case ID_CREDITS:
+		UI_CreditMenu();
 		break;
 
 #ifndef MISSIONPACK
@@ -402,6 +407,17 @@ void UI_MainMenu( void ) {
 	}
 
 	y += MAIN_MENU_VERTICAL_SPACING;
+	s_main.credits.generic.type				= MTYPE_PTEXT;
+	s_main.credits.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_main.credits.generic.x				= 320;
+	s_main.credits.generic.y				= y;
+	s_main.credits.generic.id				= ID_CREDITS;
+	s_main.credits.generic.callback			= Main_MenuEvent; 
+	s_main.credits.string					= "CREDITS";
+	s_main.credits.color					= text_big_color;
+	s_main.credits.style					= style;
+
+	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.exit.generic.type				= MTYPE_PTEXT;
 	s_main.exit.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_main.exit.generic.x					= 320;
@@ -425,6 +441,7 @@ void UI_MainMenu( void ) {
 	if ( !uis.demoversion ) {
 		Menu_AddItem( &s_main.menu,	&s_main.mods );
 	}
+	Menu_AddItem( &s_main.menu,	&s_main.credits );   
 	Menu_AddItem( &s_main.menu,	&s_main.exit );             
 
 	uis.menusp = 0;
