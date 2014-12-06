@@ -1083,10 +1083,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		cg.cur_lc = &cg.localPlayers[i];
 		cg.cur_ps = &cg.snap->pss[i];
 
-		// decide on third person view
-		cg.cur_lc->renderingThirdPerson = cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
-							&& (cg_thirdPerson[cg.cur_localPlayerNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0));
-
 		// build cg.refdef
 		inwater = CG_CalcViewValues();
 		CG_SetupFrustum();

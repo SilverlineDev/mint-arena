@@ -1120,16 +1120,6 @@ If a new player connects, this will be called after the spawn function.
 ========================
 */
 void MovePlayerToIntermission( gentity_t *ent ) {
-	// take out of follow mode if needed
-	if ( ent->player->sess.spectatorState == SPECTATOR_FOLLOW ) {
-		StopFollowing( ent );
-	}
-
-	FindIntermissionPoint();
-	// move to the spot
-	VectorCopy( level.intermission_origin, ent->s.origin );
-	VectorCopy( level.intermission_origin, ent->player->ps.origin );
-	VectorCopy (level.intermission_angle, ent->player->ps.viewangles);
 	ent->player->ps.pm_type = PM_INTERMISSION;
 
 	// clean up powerup info
@@ -1215,7 +1205,7 @@ void BeginIntermission( void ) {
 	// if single player game
 	if ( g_gametype.integer == GT_SINGLE_PLAYER ) {
 		UpdateTournamentInfo();
-		SpawnModelsOnVictoryPads();
+//		SpawnModelsOnVictoryPads();
 	}
 #endif
 	// send the current scoring to all clients
@@ -1529,18 +1519,10 @@ void CheckExitRules( void ) {
 	}
 
 	if ( level.intermissionQueued ) {
-#ifdef MISSIONPACK
-		int time = (g_singlePlayer.integer) ? SP_INTERMISSION_DELAY_TIME : INTERMISSION_DELAY_TIME;
-		if ( level.time - level.intermissionQueued >= time ) {
-			level.intermissionQueued = 0;
-			BeginIntermission();
-		}
-#else
 		if ( level.time - level.intermissionQueued >= INTERMISSION_DELAY_TIME ) {
 			level.intermissionQueued = 0;
 			BeginIntermission();
 		}
-#endif
 		return;
 	}
 
