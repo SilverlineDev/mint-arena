@@ -3103,6 +3103,10 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (EntityIsInvisible(&entinfo)) {
 			continue;
 		}
+#ifdef UNLAGGED_MISC
+		// this has nothing to do with lag compensation, but it's great for testing
+		if ( g_entities[i].flags & FL_NOTARGET ) continue;
+#endif //UNLAGGED_MISC
 		//if not an easy fragger don't shoot at chatting players
 		if (easyfragger < 0.5 && EntityIsChatting(&entinfo)) continue;
 		//

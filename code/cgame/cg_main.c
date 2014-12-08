@@ -221,7 +221,11 @@ vmCvar_t	cg_noVoiceText;
 #endif
 vmCvar_t	cg_hudFiles;
 vmCvar_t 	cg_scorePlum;
+#ifdef UNLAGGED_SMOOTHCLIENTS //#2
+// this is done server-side now
+#else
 vmCvar_t 	cg_smoothClients;
+#endif //UNLAGGED_SMOOTHCLIENTS #2
 vmCvar_t	pmove_overbounce;
 vmCvar_t	pmove_fixed;
 //vmCvar_t	cg_pmove_fixed;
@@ -271,6 +275,19 @@ vmCvar_t	cg_recordSPDemo;
 vmCvar_t	cg_recordSPDemoName;
 vmCvar_t	cg_obeliskRespawnDelay;
 #endif
+#ifdef UNLAGGED_CLIENTOPTIONS
+vmCvar_t	cg_delag;
+vmCvar_t	cg_debugDelag;
+vmCvar_t	cg_drawBBox;
+vmCvar_t	cg_cmdTimeNudge;
+vmCvar_t	sv_fps;
+vmCvar_t	cg_projectileNudge;
+vmCvar_t	cg_optimizePrediction;
+vmCvar_t	cl_timeNudge;
+vmCvar_t	cg_latentSnaps;
+vmCvar_t	cg_latentCmds;
+vmCvar_t	cg_plOut;
+#endif //UNLAGGED_CLIENTOPTIONS
 
 vmCvar_t	cg_color1[MAX_SPLITVIEW];
 vmCvar_t	cg_color2[MAX_SPLITVIEW];
@@ -415,7 +432,11 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0, RANGE_ALL },
 	{ &cg_timescale, "timescale", "1", 0, RANGE_ALL },
 	{ &cg_scorePlum, "cg_scorePlums", "1", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL },
+#ifdef UNLAGGED_SMOOTHCLIENTS //#2
+// this is done server-side now
+#else
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE, RANGE_BOOL },
+#endif //UNLAGGED_SMOOTHCLIENTS #2
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT, RANGE_ALL },
 
 	{ &pmove_overbounce, "pmove_overbounce", "0", CVAR_SYSTEMINFO, RANGE_BOOL },
@@ -428,6 +449,20 @@ static cvarTable_t cgameCvarTable[] = {
 	{ &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE, RANGE_BOOL },
 	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE, RANGE_BOOL },
+#ifdef UNLAGGED_CLIENTOPTIONS
+	{ &cg_delag, "cg_delag", "1", CVAR_ARCHIVE | CVAR_USERINFO, RANGE_BOOL },
+	{ &cg_debugDelag, "cg_debugDelag", "0", CVAR_USERINFO | CVAR_CHEAT, RANGE_BOOL },
+	{ &cg_drawBBox, "cg_drawBBox", "0", CVAR_CHEAT, RANGE_BOOL },
+	{ &cg_cmdTimeNudge, "cg_cmdTimeNudge", "0", CVAR_ARCHIVE | CVAR_USERINFO, RANGE_ALL },
+	// this will be automagically copied from the server
+	{ &sv_fps, "sv_fps", "20", 0, RANGE_ALL },
+	{ &cg_projectileNudge, "cg_projectileNudge", "0", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cg_optimizePrediction, "cg_optimizePrediction", "1", CVAR_ARCHIVE, RANGE_BOOL },
+	{ &cl_timeNudge, "cl_timeNudge", "0", CVAR_ARCHIVE, RANGE_ALL },
+	{ &cg_latentSnaps, "cg_latentSnaps", "0", CVAR_USERINFO | CVAR_CHEAT, RANGE_ALL },
+	{ &cg_latentCmds, "cg_latentCmds", "0", CVAR_USERINFO | CVAR_CHEAT, RANGE_ALL },
+	{ &cg_plOut, "cg_plOut", "0", CVAR_USERINFO | CVAR_CHEAT, RANGE_BOOL },
+#endif //UNLAGGED_CLIENTOPTIONS
 	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_railWidth, "cg_railWidth", "16", CVAR_ARCHIVE, RANGE_ALL },
 	{ &cg_railCoreWidth, "cg_railCoreWidth", "6", CVAR_ARCHIVE, RANGE_ALL },
@@ -617,6 +652,34 @@ void CG_UpdateCgameCvars( void ) {
 		if ( !cv->vmCvar ) {
 			continue;
 		}
+
+#ifdef UNLAGGED_CLIENTOPTIONS
+		// clamp the value between 0 and 999
+		// negative values would suck - people could conceivably shoot other
+		// players *long* after they had left the area, on purpose
+		if ( cv->vmCvar == &cg_cmdTimeNudge ) {
+			CG_Cvar_ClampInt( cv->cvarName, cv->vmCvar, 0, 999 );
+		}
+		// cl_timenudge less than -50 or greater than 50 doesn't actually
+		// do anything more than -50 or 50 (actually the numbers are probably
+		// closer to -30 and 30, but 50 is nice and round-ish)
+		// might as well not feed the myth, eh?
+		else if ( cv->vmCvar == &cl_timeNudge ) {
+			CG_Cvar_ClampInt( cv->cvarName, cv->vmCvar, -50, 50 );
+		}
+		// don't let this go too high - no point
+		else if ( cv->vmCvar == &cg_latentSnaps ) {
+			CG_Cvar_ClampInt( cv->cvarName, cv->vmCvar, 0, 10 );
+		}
+		// don't let this get too large
+		else if ( cv->vmCvar == &cg_latentCmds ) {
+			CG_Cvar_ClampInt( cv->cvarName, cv->vmCvar, 0, MAX_LATENT_CMDS - 1 );
+		}
+		// no more than 100% packet loss
+		else if ( cv->vmCvar == &cg_plOut ) {
+			CG_Cvar_ClampInt( cv->cvarName, cv->vmCvar, 0, 100 );
+		}
+#endif //UNLAGGED_CLIENTOPTIONS
 
 		trap_Cvar_Update( cv->vmCvar );
 	}

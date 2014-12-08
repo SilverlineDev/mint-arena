@@ -191,6 +191,12 @@ void CG_ParseServerinfo( void ) {
 	cgs.maxplayers = atoi( Info_ValueForKey( info, "sv_maxclients" ) );
 	mapname = Info_ValueForKey( info, "mapname" );
 	Com_sprintf( cgs.mapname, sizeof( cgs.mapname ), "maps/%s.bsp", mapname );
+
+#ifdef UNLAGGED_SERVEROPTIONS
+	// we'll need this for deciding whether or not to predict weapon effects
+	cgs.delagHitscan = atoi( Info_ValueForKey( info, "g_delagHitscan" ) );
+	trap_Cvar_Set("g_delagHitscan", va("%i", cgs.delagHitscan));
+#endif //UNLAGGED_SERVEROPTIONS
 }
 
 /*

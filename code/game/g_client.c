@@ -739,6 +739,43 @@ void PlayerUserinfoChanged( int playerNum ) {
 		player->pers.predictItemPickup = qtrue;
 	}
 
+#ifdef UNLAGGED_CLIENTOPTIONS
+	// see if the player has opted out
+	s = Info_ValueForKey( userinfo, "cg_delag" );
+	if ( !atoi( s ) ) {
+		player->pers.delag = 0;
+	} else {
+		player->pers.delag = atoi( s );
+	}
+
+	// see if the player is nudging his shots
+	s = Info_ValueForKey( userinfo, "cg_cmdTimeNudge" );
+	player->pers.cmdTimeNudge = atoi( s );
+
+	// see if the player wants to debug the backward reconciliation
+	s = Info_ValueForKey( userinfo, "cg_debugDelag" );
+	if ( !atoi( s ) ) {
+		player->pers.debugDelag = qfalse;
+	}
+	else {
+		player->pers.debugDelag = qtrue;
+	}
+
+#ifdef UNLAGGED_LAGSIMULATION
+	// see if the player is simulating incoming latency
+	s = Info_ValueForKey( userinfo, "cg_latentSnaps" );
+	player->pers.latentSnaps = atoi( s );
+
+	// see if the player is simulating outgoing latency
+	s = Info_ValueForKey( userinfo, "cg_latentCmds" );
+	player->pers.latentCmds = atoi( s );
+
+	// see if the player is simulating outgoing packet loss
+	s = Info_ValueForKey( userinfo, "cg_plOut" );
+	player->pers.plOut = atoi( s );
+#endif //UNLAGGED_LAGSIMULATION
+#endif //UNLAGGED_CLIENTOPTIONS
+
 	// set name
 	Q_strncpyz ( oldname, player->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");
@@ -967,6 +1004,16 @@ char *PlayerConnect( int playerNum, qboolean firstTime, qboolean isBot, int conn
 //	if ( !player->areabits )
 //		player->areabits = trap_Alloc( (trap_AAS_PointReachabilityAreaIndex( NULL ) + 7) / 8, NULL );
 
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#5
+	// announce it
+	if ( g_delagHitscan.integer ) {
+		trap_SendServerCommand( playerNum, "print \"This server is Unlagged: full lag compensation is ON!\n\"" );
+	}
+	else {
+		trap_SendServerCommand( playerNum, "print \"This server is Unlagged: full lag compensation is OFF!\n\"" );
+	}
+#endif //UNLAGGED_BACKWARDRECONCILIATION #5
+
 	return NULL;
 }
 
@@ -1093,6 +1140,13 @@ void PlayerSpawn(gentity_t *ent) {
 	// and never clear the voted flag
 	flags = ent->player->ps.eFlags & (EF_TELEPORT_BIT | EF_VOTED | EF_TEAMVOTED);
 	flags ^= EF_TELEPORT_BIT;
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#3
+	// we don't want players being backward-reconciled to the place they died
+	G_ResetHistory( ent );
+	// and this is as good a time as any to clear the saved state
+	ent->player->saved.leveltime = 0;
+#endif //UNLAGGED_BACKWARDRECONCILIATION #3
 
 	// clear everything but the persistant data
 

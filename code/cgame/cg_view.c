@@ -981,6 +981,12 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	int		i;
 
 	cg.time = serverTime;
+
+#ifdef UNLAGGED_LAGSIMULATION //#1
+	// adjust the clock to reflect latent snaps
+	cg.time -= cg_latentSnaps.integer * (1000 / sv_fps.integer);
+#endif //UNLAGGED_LAGSIMULATION #1
+
 	cg.demoPlayback = demoPlayback;
 
 	// if we are only updating the screen as a loading

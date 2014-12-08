@@ -520,6 +520,10 @@ typedef struct
 // occurs, and they will have visible effects for #define STEP_TIME or whatever msec after
 
 #define MAX_PREDICTED_EVENTS	16
+
+#ifdef UNLAGGED_OPTIMIZEDPREDICTION
+#define NUM_SAVED_STATES (CMD_BACKUP + 2)
+#endif //UNLAGGED_OPTIMIZEDPREDICTION
  
 typedef struct {
 
@@ -815,6 +819,12 @@ typedef struct {
 	int				cur_localPlayerNum;
 	localPlayer_t	localPlayers[MAX_SPLITVIEW];
 
+#ifdef UNLAGGED_OPTIMIZEDPREDICTION
+	int			lastPredictedCommand;
+	int			lastServerTime;
+	playerState_t savedPmoveStates[NUM_SAVED_STATES];
+	int			stateHead, stateTail;
+#endif //UNLAGGED_OPTIMIZEDPREDICTION
 } cg_t;
 
 
@@ -1268,6 +1278,10 @@ typedef struct {
 	// media
 	cgMedia_t		media;
 
+#ifdef UNLAGGED_CLIENTOPTIONS
+	// this will be set to the server's g_delagHitscan
+	int				delagHitscan;
+#endif //UNLAGGED_CLIENTOPTIONS
 } cgs_t;
 
 //==============================================================================
@@ -1356,7 +1370,11 @@ extern	vmCvar_t		cg_noVoiceChats;
 extern	vmCvar_t		cg_noVoiceText;
 #endif
 extern  vmCvar_t		cg_scorePlum;
+#ifdef UNLAGGED_SMOOTHCLIENTS //#2
+// this is done server-side now
+#else
 extern	vmCvar_t		cg_smoothClients;
+#endif //UNLAGGED_SMOOTHCLIENTS #2
 extern	vmCvar_t		pmove_overbounce;
 extern	vmCvar_t		pmove_fixed;
 extern	vmCvar_t		pmove_msec;
@@ -1419,6 +1437,32 @@ extern	vmCvar_t		cg_thirdPersonHeight[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_currentSelectedPlayer[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_currentSelectedPlayerName[MAX_SPLITVIEW];
 #endif
+
+#ifdef UNLAGGED_CLIENTOPTIONS
+extern	vmCvar_t		cg_delag;
+extern	vmCvar_t		cg_debugDelag;
+extern	vmCvar_t		cg_drawBBox;
+extern	vmCvar_t		cg_cmdTimeNudge;
+extern	vmCvar_t		sv_fps;
+extern	vmCvar_t		cg_projectileNudge;
+extern	vmCvar_t		cg_optimizePrediction;
+extern	vmCvar_t		cl_timeNudge;
+extern	vmCvar_t		cg_latentSnaps;
+extern	vmCvar_t		cg_latentCmds;
+extern	vmCvar_t		cg_plOut;
+#endif //UNLAGGED_CLIENTOPTIONS
+
+#ifdef UNLAGGED_ATTACKPREDICTION //#1
+void CG_PredictWeaponEffects( centity_t *cent );
+#endif //UNLAGGED_ATTACKPREDICTION #1
+
+#ifdef UNLAGGED_CLIENTOPTIONSADDBOUNDINGBOX
+void CG_AddBoundingBox( centity_t *cent );
+#endif
+
+#ifdef UNLAGGED
+qboolean CG_Cvar_ClampInt( const char *name, vmCvar_t *vmCvar, int min, int max );
+#endif //UNLAGGED
 
 //
 // cg_main.c
@@ -1755,6 +1799,9 @@ void CG_ProcessSnapshots( qboolean initialOnly );
 void CG_RestoreSnapshot( void );
 playerState_t *CG_LocalPlayerState( int playerNum );
 int CG_NumLocalPlayers( void );
+#ifdef UNLAGGED_EARLYTRANSITIONING
+void CG_TransitionEntity( centity_t *cent );
+#endif //UNLAGGED_EARLYTRANSITIONING
 
 
 //

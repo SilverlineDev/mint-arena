@@ -139,6 +139,7 @@ MACHINEGUN
 ======================================================================
 */
 
+#ifndef UNLAGGED_ATTACKPREDICTION //#3
 /*
 ======================
 SnapVectorTowards
@@ -160,6 +161,7 @@ void SnapVectorTowards( vec3_t v, vec3_t to ) {
 		}
 	}
 }
+#endif //UNLAGGED_ATTACKPREDICTION #3
 
 #ifdef MISSIONPACK
 #define CHAINGUN_SPREAD		600
@@ -181,11 +183,22 @@ void Bullet_Fire (gentity_t *ent, float spread, int damage, int mod ) {
 	gentity_t	*traceEnt;
 	int			i, passent;
 
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+	// we have to use something now that the client knows in advance
+	int			seed = ent->client->attackTime % 256;
+#endif //UNLAGGED_ATTACKPREDICTION #2
+
 	damage *= s_quadFactor;
 
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+	r = Q_random(&seed) * M_PI * 2.0f;
+	u = sin(r) * Q_crandom(&seed) * spread * 16;
+	r = cos(r) * Q_crandom(&seed) * spread * 16;
+#else
 	r = random() * M_PI * 2.0f;
 	u = sin(r) * crandom() * spread * 16;
 	r = cos(r) * crandom() * spread * 16;
+#endif //UNLAGGED_ATTACKPREDICTION #2
 	VectorMA (muzzle, 8192*16, forward, end);
 	VectorMA (end, r, right, end);
 	VectorMA (end, u, up, end);
@@ -193,7 +206,18 @@ void Bullet_Fire (gentity_t *ent, float spread, int damage, int mod ) {
 	passent = ent->s.number;
 	for (i = 0; i < 10; i++) {
 
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+		// backward-reconcile the other clients
+		G_DoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
+
 		trap_Trace (&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT);
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+		// put them back
+		G_UndoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
+
 		if ( tr.surfaceFlags & SURF_NOIMPACT ) {
 			return;
 		}
@@ -207,12 +231,22 @@ void Bullet_Fire (gentity_t *ent, float spread, int damage, int mod ) {
 		if ( traceEnt->takedamage && traceEnt->player ) {
 			tent = G_TempEntity( tr.endpos, EV_BULLET_HIT_FLESH );
 			tent->s.eventParm = traceEnt->s.number;
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+			// we need the client number to determine whether or not to
+			// suppress this event
+			tent->s.clientNum = ent->s.clientNum;
+#endif //UNLAGGED_ATTACKPREDICTION #2
 			if( LogAccuracyHit( traceEnt, ent ) ) {
 				ent->player->accuracy_hits++;
 			}
 		} else {
 			tent = G_TempEntity( tr.endpos, EV_BULLET_HIT_WALL );
 			tent->s.eventParm = DirToByte( tr.plane.normal );
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+			// we need the client number to determine whether or not to
+			// suppress this event
+			tent->s.clientNum = ent->s.clientNum;
+#endif //UNLAGGED_ATTACKPREDICTION #2
 		}
 		tent->s.otherEntityNum = ent->s.number;
 
@@ -339,11 +373,21 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 	vec3_t		forward, right, up;
 	qboolean	hitPlayer = qfalse;
 
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+	// use this for testing
+	//Com_Printf( "Server seed: %d\n", seed );
+#endif
+
 	// derive the right and up vectors from the forward vector, because
 	// the client won't have any other information
 	VectorNormalize2( origin2, forward );
 	PerpendicularVector( right, forward );
 	CrossProduct( forward, right, up );
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+	// backward-reconcile the other clients
+	G_DoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
 
 	// generate the "random" spread pattern
 	for ( i = 0 ; i < DEFAULT_SHOTGUN_COUNT ; i++ ) {
@@ -357,6 +401,11 @@ void ShotgunPattern( vec3_t origin, vec3_t origin2, int seed, gentity_t *ent ) {
 			ent->player->accuracy_hits++;
 		}
 	}
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+	// put them back
+	G_UndoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
 }
 
 
@@ -367,7 +416,12 @@ void weapon_supershotgun_fire (gentity_t *ent) {
 	tent = G_TempEntity( muzzle, EV_SHOTGUN );
 	VectorScale( forward, 4096, tent->s.origin2 );
 	SnapVector( tent->s.origin2 );
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+	// this has to be something the client can predict now
+	tent->s.eventParm = ent->client->attackTime % 256; // seed for spread pattern
+#else
 	tent->s.eventParm = rand() & 255;		// seed for spread pattern
+#endif //UNLAGGED_ATTACKPREDICTION #2
 	tent->s.otherEntityNum = ent->s.number;
 
 	ShotgunPattern( tent->s.pos.trBase, tent->s.origin2, tent->s.eventParm, ent );
@@ -467,6 +521,11 @@ void weapon_railgun_fire (gentity_t *ent) {
 
 	VectorMA (muzzle, 8192, forward, end);
 
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+	// backward-reconcile the other clients
+	G_DoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
+
 	// trace only against the solids, so the railgun will go through people
 	unlinked = 0;
 	hits = 0;
@@ -520,6 +579,11 @@ void weapon_railgun_fire (gentity_t *ent) {
 		unlinkedEntities[unlinked] = traceEnt;
 		unlinked++;
 	} while ( unlinked < MAX_RAIL_HITS );
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+	// put them back
+	G_UndoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
 
 	// link back in any entities we unlinked
 	for ( i = 0 ; i < unlinked ; i++ ) {
@@ -628,13 +692,28 @@ void Weapon_LightningFire( gentity_t *ent ) {
 	gentity_t	*traceEnt, *tent;
 	int			damage, i, passent;
 
+#ifdef UNLAGGED_SERVEROPTIONS
+	// this is configurable now
+	damage = g_lightningDamage.integer * s_quadFactor;
+#else
 	damage = 8 * s_quadFactor;
+#endif //UNLAGGED_SERVEROPTIONS
 
 	passent = ent->s.number;
 	for (i = 0; i < 10; i++) {
 		VectorMA( muzzle, LIGHTNING_RANGE, forward, end );
 
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+	// backward-reconcile the other clients
+	G_DoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
+
 		trap_Trace( &tr, muzzle, NULL, NULL, end, passent, MASK_SHOT );
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#2
+	// put them back
+	G_UndoTimeShiftFor( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #2
 
 #ifdef MISSIONPACK
 		// if not the first trace (the lightning bounced of an invulnerability sphere)

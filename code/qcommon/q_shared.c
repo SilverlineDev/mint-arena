@@ -1667,3 +1667,27 @@ const char *Com_LocalPlayerBaseCvarName(const char *in_cvarName) {
 	return baseName;
 }
 
+#ifdef UNLAGGED_ATTACKPREDICTION //#3
+// moved from g_weapon.c
+/*
+======================
+SnapVectorTowards
+
+Round a vector to integers for more efficient network
+transmission, but make sure that it rounds towards a given point
+rather than blindly truncating.  This prevents it from truncating 
+into a wall.
+======================
+*/
+void SnapVectorTowards( vec3_t v, vec3_t to ) {
+	int		i;
+
+	for ( i = 0 ; i < 3 ; i++ ) {
+		if ( to[i] <= v[i] ) {
+			v[i] = (int)v[i];
+		} else {
+			v[i] = (int)v[i] + 1;
+		}
+	}
+}
+#endif //UNLAGGED_ATTACKPREDICTION #3

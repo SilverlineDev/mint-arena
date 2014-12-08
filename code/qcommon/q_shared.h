@@ -34,6 +34,34 @@ Suite 120, Rockville, Maryland 20850 USA.
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
+//CPTDD: This may be the wrong place to include this part.
+//CPTDD: Note that all currently commented out options are broken
+//CPTDD: Note also that moving up stairs, moving through water,
+//		and standing on platforms seem to be broken, at least
+//		visually.
+#ifdef UNLAGGED_ALL
+#define UNLAGGED
+//#define UNLAGGED_ATTACKPREDICTION
+#define UNLAGGED_BACKWARDRECONCILIATION
+#define UNLAGGED_CLIENTOPTIONS
+//#define UNLAGGED_CLIENTOPTIONSADDBOUNDINGBOX
+#define UNLAGGED_EARLYTRANSITIONING
+#define UNLAGGED_GRAPPLE
+//#define UNLAGGED_LAGSIMULATION
+#define UNLAGGED_MISC
+//#define UNLAGGED_OPTIMIZEDPREDICTION
+//#define UNLAGGED_PROJECTILENUDGE
+#define UNLAGGED_SERVEROPTIONS
+//#define UNLAGGED_TIMENUDGEEXTRAPOLATION
+//#define UNLAGGED_TRUELIGHTNING
+#define UNLAGGED_TRUEPING
+#endif
+
+//CPTDD: This needs to be set for UNLAGGED_CLIENTOPTIONS to work
+#ifdef UNLAGGED //UNLAGGED_LAGSIMULATION //#2
+#define MAX_LATENT_CMDS 64
+#endif //UNLAGGED_LAGSIMULATION #2
+
 #ifdef _MSC_VER
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
@@ -493,6 +521,11 @@ typedef struct {
 #define Byte4Copy(a,b)			((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2],(b)[3]=(a)[3])
 
 #define	SnapVector(v) {v[0]=((int)(v[0]));v[1]=((int)(v[1]));v[2]=((int)(v[2]));}
+#ifdef UNLAGGED_ATTACKPREDICTION //#3
+// moved from g_weapon.c
+void SnapVectorTowards( vec3_t v, vec3_t to );
+#endif //UNLAGGED_ATTACKPREDICTION #3
+
 // just in case you don't want to use the macros
 vec_t _DotProduct( const vec3_t v1, const vec3_t v2 );
 void _VectorSubtract( const vec3_t veca, const vec3_t vecb, vec3_t out );

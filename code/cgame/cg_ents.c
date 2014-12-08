@@ -876,7 +876,15 @@ CG_CalcEntityLerpPositions
 */
 static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 	int		i;
+#ifdef UNLAGGED_PROJECTILENUDGE
+	// this will be set to how far forward projectiles will be extrapolated
+	int timeshift = 0;
+#endif //UNLAGGED_PROJECTILENUDGE
 
+#ifdef UNLAGGED_SMOOTHCLIENTS //#2
+	// this is done server-side now - cg_smoothClients is undefined
+	// players will always be TR_INTERPOLATE
+#else
 	// if this player does not want to see extrapolated players
 	if ( !cg_smoothClients.integer ) {
 		// make sure the players use TR_INTERPOLATE
@@ -885,6 +893,7 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 			cent->nextState.pos.trType = TR_INTERPOLATE;
 		}
 	}
+#endif //UNLAGGED_SMOOTHCLIENTS #2
 
 	if ( cent->interpolate && cent->currentState.pos.trType == TR_INTERPOLATE ) {
 		CG_InterpolateEntityPosition( cent );
@@ -899,9 +908,79 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 		return;
 	}
 
+#ifdef UNLAGGED_TIMENUDGEEXTRAPOLATION
+	// interpolating failed (probably no nextSnap), so extrapolate
+	// this can also happen if the teleport bit is flipped, but that
+	// won't be noticeable
+	
+	
+	
+	
+	
+	
+	//CPTDD: Does this even work?
+	//!!TODO: Clean up.
+	
+	
+	
+	
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+	//-----
+	if ( cent->currentState.number < MAX_CLIENTS &&
+			cent->currentState.playerNum != cg.snap->pss[i].playerNum ) {
+	//		cent->currentState.playerNum != cg.predictedPlayerState.playerNum ) {
+	//--------
+		cent->currentState.pos.trType = TR_LINEAR_STOP;
+		cent->currentState.pos.trTime = cg.snap->serverTime;
+		cent->currentState.pos.trDuration = 1000 / sv_fps.integer;
+	}
+	//-----
+	}
+#endif
+
+//!!TODO: FIX
+/*#ifdef UNLAGGED_PROJECTILENUDGE
+	// if it's a missile but not a grappling hook
+	if ( cent->currentState.eType == ET_MISSILE && cent->currentState.weapon != WP_GRAPPLING_HOOK ) {
+		// if it's one of ours
+		if ( cent->currentState.otherEntityNum == cg.playerNum ) {
+			// extrapolate one server frame's worth - this will correct for tiny
+			// visual inconsistencies introduced by backward-reconciling all players
+			// one server frame before running projectiles
+			timeshift = 1000 / sv_fps.integer;
+		}
+		// if it's not, and it's not a grenade launcher
+		else if ( cent->currentState.weapon != WP_GRENADE_LAUNCHER ) {
+			// extrapolate based on cg_projectileNudge
+			timeshift = cg_projectileNudge.integer + 1000 / sv_fps.integer;
+		}
+	}
+
+	// just use the current frame and evaluate as best we can
+	BG_EvaluateTrajectory( &cent->currentState.pos, cg.time + timeshift, cent->lerpOrigin );
+	BG_EvaluateTrajectory( &cent->currentState.apos, cg.time + timeshift, cent->lerpAngles );
+
+	// if there's a time shift
+	if ( timeshift != 0 ) {
+		trace_t tr;
+		vec3_t lastOrigin;
+
+		BG_EvaluateTrajectory( &cent->currentState.pos, cg.time, lastOrigin );
+
+		CG_Trace( &tr, lastOrigin, vec3_origin, vec3_origin, cent->lerpOrigin, cent->currentState.number, MASK_SHOT );
+
+		// don't let the projectile go through the floor
+		if ( tr.fraction < 1.0f ) {
+			cent->lerpOrigin[0] = lastOrigin[0] + tr.fraction * ( cent->lerpOrigin[0] - lastOrigin[0] );
+			cent->lerpOrigin[1] = lastOrigin[1] + tr.fraction * ( cent->lerpOrigin[1] - lastOrigin[1] );
+			cent->lerpOrigin[2] = lastOrigin[2] + tr.fraction * ( cent->lerpOrigin[2] - lastOrigin[2] );
+		}
+	}
+#else*/
 	// just use the current frame and evaluate as best we can
 	BG_EvaluateTrajectory( &cent->currentState.pos, cg.time, cent->lerpOrigin );
 	BG_EvaluateTrajectory( &cent->currentState.apos, cg.time, cent->lerpAngles );
+//#endif //UNLAGGED_PROJECTILENUDGE
 
 	// adjust for riding a mover if it wasn't rolled into the predicted
 	// player state
@@ -1245,10 +1324,32 @@ void CG_AddPacketEntities( void ) {
 		CG_CalcEntityLerpPositions( &cg_entities[ cg.snap->pss[num].playerNum ] );
 	}
 
+#ifdef UNLAGGED_EARLYTRANSITIONING
+	if ( cg.nextSnap ) {
+		// pre-add some of the entities sent over by the server
+		// we have data for them and they don't need to interpolate
+		for ( num = 0 ; num < cg.nextSnap->numEntities ; num++ ) {
+			cent = &cg_entities[ cg.nextSnap->entities[ num ].number ];
+			if ( cent->nextState.eType == ET_MISSILE || cent->nextState.eType == ET_GENERAL ) {
+				// transition it immediately and add it
+				CG_TransitionEntity( cent );
+				cent->interpolate = qtrue;
+				CG_AddCEntity( cent );
+			}
+		}
+	}
+#endif //UNLAGGED_EARLYTRANSITIONING
+
 	// add each entity sent over by the server
 	for ( num = 0 ; num < cg.snap->numEntities ; num++ ) {
 		cent = &cg_entities[ cg.snap->entities[ num ].number ];
+#ifdef UNLAGGED_EARLYTRANSITIONING
+		if ( !cg.nextSnap || ( cent->nextState.eType != ET_MISSILE && cent->nextState.eType != ET_GENERAL ) ) {
+			CG_AddCEntity( cent );
+		}
+#else
 		CG_AddCEntity( cent );
+#endif //UNLAGGED_EARLYTRANSITIONING
 	}
 }
 

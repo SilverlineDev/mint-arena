@@ -983,6 +983,41 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_RAILTRAIL");
 		cent->currentState.weapon = WP_RAILGUN;
 
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+		// if the client is us, unlagged is on server-side, and we've got it client-side
+		if ( es->playerNum >= 0 && es->playerNum < MAX_CLIENTS ) {
+			qboolean clientIsUs = qfalse;
+
+			//CPTDD: If something is broken, check here:
+			//Determine if one of our players is the client
+			for (i = 0; i < CG_MaxSplitView(); i++) {
+				if ( es->playerNum == cg.snap->pss[i].playerNum ) {
+					clientIsUs = qtrue;
+				}
+			}
+
+			if ( clientIsUs && 
+					cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 16) &&
+					!cg.localPlayers[i].renderingThirdPerson ) {
+				// do nothing, because it was already predicted
+				//Com_Printf("Ignoring rail trail event\n");
+			}
+			else {
+				// draw a rail trail, because it wasn't predicted
+				CG_RailTrail( pi, es->origin2, es->pos.trBase );
+
+				// if the end was on a nomark surface, don't make an explosion
+				if ( es->eventParm != 255 ) {
+					ByteToDir( es->eventParm, dir );
+					CG_MissileHitWall( es->weapon, es->playerNum, position, dir, IMPACTSOUND_DEFAULT );
+				}
+				//Com_Printf("Non-predicted rail trail\n");
+			}
+			
+			
+			
+		}
+#else
 		if ( es->playerNum >= 0 && es->playerNum < MAX_CLIENTS ) {
 			for (i = 0; i < CG_MaxSplitView(); i++) {
 				if ( es->playerNum == cg.snap->pss[i].playerNum
@@ -1005,21 +1040,97 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			CG_MissileHitWall( es->weapon, es->playerNum, position, dir, IMPACTSOUND_DEFAULT );
 		}
 		break;
+#endif //UNLAGGED_ATTACKPREDICTION #2
 
 	case EV_BULLET_HIT_WALL:
 		DEBUGNAME("EV_BULLET_HIT_WALL");
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+		{
+			qboolean clientIsUs = qfalse;
+			//CPTDD: If something is broken, check here:
+			//Determine if one of our players is the client
+			for (i = 0; i < CG_MaxSplitView(); i++) {
+				if ( es->playerNum == cg.snap->pss[i].playerNum ) {
+					clientIsUs = qtrue;
+				}
+			}
+			
+			// if the client is us, unlagged is on server-side, and we've got it client-side
+			if ( clientIsUs && cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 2) ) {
+				// do nothing, because it was already predicted
+				//Com_Printf("Ignoring bullet event\n");
+			}
+			else {
+				// do the bullet, because it wasn't predicted
+				ByteToDir( es->eventParm, dir );
+				CG_Bullet( es->pos.trBase, es->otherEntityNum, dir, qfalse, ENTITYNUM_WORLD );
+				//Com_Printf("Non-predicted bullet\n");
+			}
+		}
+#else
 		ByteToDir( es->eventParm, dir );
 		CG_Bullet( es->pos.trBase, es->otherEntityNum, dir, qfalse, ENTITYNUM_WORLD );
+#endif //UNLAGGED_ATTACKPREDICTION #2
 		break;
 
 	case EV_BULLET_HIT_FLESH:
 		DEBUGNAME("EV_BULLET_HIT_FLESH");
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+		{
+			qboolean clientIsUs = qfalse;
+
+			//CPTDD: If something is broken, check here:
+			//Determine if one of our players is the client
+			for (i = 0; i < CG_MaxSplitView(); i++) {
+				if ( es->playerNum == cg.snap->pss[i].playerNum ) {
+					clientIsUs = qtrue;
+				}
+			}
+
+			// if the client is us, unlagged is on server-side, and we've got it client-side
+			if ( clientIsUs && cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 2) ) {
+				// do nothing, because it was already predicted
+				//Com_Printf("Ignoring bullet event\n");
+			}
+			else {
+				// do the bullet, because it wasn't predicted
+				CG_Bullet( es->pos.trBase, es->otherEntityNum, dir, qtrue, es->eventParm );
+				//Com_Printf("Non-predicted bullet\n");
+			}
+		}
+#else
 		CG_Bullet( es->pos.trBase, es->otherEntityNum, dir, qtrue, es->eventParm );
+#endif //UNLAGGED_ATTACKPREDICTION #2
 		break;
 
 	case EV_SHOTGUN:
 		DEBUGNAME("EV_SHOTGUN");
+#ifdef UNLAGGED_ATTACKPREDICTION //#2
+		{
+			qboolean clientIsUs = qfalse;
+
+			//CPTDD: If something is broken, check here:
+			//Determine if one of our players is the client
+			for (i = 0; i < CG_MaxSplitView(); i++) {
+				if ( es->playerNum == cg.snap->pss[i].playerNum ) {
+					clientIsUs = qtrue;
+				}
+			}
+
+			// if the client is us, unlagged is on server-side, and we've got it client-side
+			if ( clientIsUs &&  cgs.delagHitscan && (cg_delag.integer & 1 || cg_delag.integer & 4) ) {
+				// do nothing, because it was already predicted
+				//Com_Printf("Ignoring shotgun event\n");
+			}
+			else {
+				// do the shotgun pattern, because it wasn't predicted
+				CG_ShotgunFire( es );
+				//Com_Printf("Non-predicted shotgun pattern\n");
+			}
+		}
+#else
 		CG_ShotgunFire( es );
+#endif
 		break;
 
 	case EV_GENERAL_SOUND:

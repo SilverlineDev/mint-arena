@@ -106,7 +106,7 @@ BASEGAME=baseq3
 endif
 
 ifndef BASEGAME_CFLAGS
-BASEGAME_CFLAGS=
+BASEGAME_CFLAGS=-DUNLAGGED_ALL
 endif
 
 BASEGAME_CFLAGS+=-DMODDIR=\"$(BASEGAME)\"
@@ -117,7 +117,7 @@ endif
 
 ifndef MISSIONPACK_CFLAGS
 ifeq ($(USE_MISSIONPACK_Q3_UI), 1)
-MISSIONPACK_CFLAGS=-DMISSIONPACK
+MISSIONPACK_CFLAGS=-DMISSIONPACK -DUNLAGGED_ALL
 else
 MISSIONPACK_CFLAGS=-DMISSIONPACK -DMISSIONPACK_HUD
 endif
@@ -1047,6 +1047,7 @@ Q3CGOBJ = \
   $(B)/$(BASEGAME)/cgame/cg_surface.o \
   $(B)/$(BASEGAME)/cgame/cg_syscalls.o \
   $(B)/$(BASEGAME)/cgame/cg_text.o \
+  $(B)/$(BASEGAME)/cgame/cg_unlagged.o \
   $(B)/$(BASEGAME)/cgame/cg_view.o \
   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
   \
@@ -1142,6 +1143,7 @@ MPCGOBJ = \
   $(B)/$(MISSIONPACK)/cgame/cg_surface.o \
   $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o \
   $(B)/$(MISSIONPACK)/cgame/cg_text.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_unlagged.o \
   $(B)/$(MISSIONPACK)/cgame/cg_view.o \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
   \
@@ -1255,6 +1257,7 @@ Q3GOBJ = \
   $(B)/$(BASEGAME)/game/g_target.o \
   $(B)/$(BASEGAME)/game/g_team.o \
   $(B)/$(BASEGAME)/game/g_trigger.o \
+  $(B)/$(BASEGAME)/game/g_unlagged.o \
   $(B)/$(BASEGAME)/game/g_utils.o \
   $(B)/$(BASEGAME)/game/g_weapon.o \
   \
@@ -1314,6 +1317,7 @@ MPGOBJ = \
   $(B)/$(MISSIONPACK)/game/g_target.o \
   $(B)/$(MISSIONPACK)/game/g_team.o \
   $(B)/$(MISSIONPACK)/game/g_trigger.o \
+  $(B)/$(MISSIONPACK)/game/g_unlagged.o \
   $(B)/$(MISSIONPACK)/game/g_utils.o \
   $(B)/$(MISSIONPACK)/game/g_weapon.o \
   \

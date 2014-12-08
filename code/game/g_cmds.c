@@ -68,7 +68,11 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 		if ( cl->pers.connected == CON_CONNECTING ) {
 			ping = -1;
 		} else {
+#ifdef UNLAGGED_TRUEPING
+			ping = cl->pers.realPing < 999 ? cl->pers.realPing : 999;
+#else
 			ping = cl->ps.ping < 999 ? cl->ps.ping : 999;
+#endif
 		}
 
 		if( cl->accuracy_shots ) {

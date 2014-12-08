@@ -763,6 +763,119 @@ void PlayerThink_real( gentity_t *ent ) {
 //		G_Printf("serverTime >>>>>\n" );
 	} 
 
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#4
+	// frameOffset should be about the number of milliseconds into a frame 
+	// this command packet was received, depending on how fast the server
+	// does a G_RunFrame()
+	player->frameOffset = trap_Milliseconds() - level.frameStartTime;
+#endif //UNLAGGED_BACKWARDRECONCILIATION #4
+
+
+#ifdef UNLAGGED_LAGSIMULATION //#3
+	// if the client wants to simulate outgoing packet loss
+	if ( player->pers.plOut ) {
+		// see if a random value is below the threshhold
+		float thresh = (float)player->pers.plOut / 100.0f;
+		if ( random() < thresh ) {
+			// do nothing at all if it is - this is a lost command
+			return;
+		}
+	}
+#endif //UNLAGGED_LAGSIMULATION #3
+
+
+#ifdef UNLAGGED_TRUEPING
+	// save the estimated ping in a queue for averaging later
+
+	// we use level.previousTime to account for 50ms lag correction
+	// besides, this will turn out numbers more like what players are used to
+	player->pers.pingsamples[player->pers.samplehead] = level.previousTime + player->frameOffset - ucmd->serverTime;
+	player->pers.samplehead++;
+	if ( player->pers.samplehead >= NUM_PING_SAMPLES ) {
+		player->pers.samplehead -= NUM_PING_SAMPLES;
+	}
+
+	// initialize the real ping
+	if ( g_truePing.integer ) {
+		int i, sum = 0;
+
+		// get an average of the samples we saved up
+		for ( i = 0; i < NUM_PING_SAMPLES; i++ ) {
+			sum += player->pers.pingsamples[i];
+		}
+
+		player->pers.realPing = sum / NUM_PING_SAMPLES;
+	}
+	else {
+		// if g_truePing is off, use the normal ping
+		player->pers.realPing = player->ps.ping;
+	}
+#endif //UNLAGGED_TRUEPING
+
+
+#ifdef UNLAGGED_LAGSIMULATION //#2
+	// keep a queue of past commands
+	player->pers.cmdqueue[player->pers.cmdhead] = player->pers.cmd;
+	player->pers.cmdhead++;
+	if ( player->pers.cmdhead >= MAX_LATENT_CMDS ) {
+		player->pers.cmdhead -= MAX_LATENT_CMDS;
+	}
+
+	// if the client wants latency in commands (client-to-server latency)
+	if ( player->pers.latentCmds ) {
+		// save the actual command time
+		int time = ucmd->serverTime;
+
+		// find out which index in the queue we want
+		int cmdindex = player->pers.cmdhead - player->pers.latentCmds - 1;
+		while ( cmdindex < 0 ) {
+			cmdindex += MAX_LATENT_CMDS;
+		}
+
+		// read in the old command
+		player->pers.cmd = player->pers.cmdqueue[cmdindex];
+
+		// adjust the real ping to reflect the new latency
+		player->pers.realPing += time - ucmd->serverTime;
+	}
+#endif //UNLAGGED_LAGSIMULATION #2
+
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#4
+	// save the command time *before* pmove_fixed messes with the serverTime,
+	// and *after* lag simulation messes with it :)
+	// attackTime will be used for backward reconciliation later (time shift)
+	player->attackTime = ucmd->serverTime;
+#endif //UNLAGGED_BACKWARDRECONCILIATION #4
+
+
+#ifdef UNLAGGED_SMOOTHCLIENTS //#1
+	// keep track of this for later - we'll use this to decide whether or not
+	// to send extrapolated positions for this client
+	player->lastUpdateFrame = level.framenum;
+#endif //UNLAGGED_SMOOTHCLIENTS #1
+
+
+#ifdef UNLAGGED_LAGSIMULATION //#1
+	// if the client is adding latency to received snapshots (server-to-client latency)
+	if ( player->pers.latentSnaps ) {
+		// adjust the real ping
+		player->pers.realPing += player->pers.latentSnaps * (1000 / sv_fps.integer);
+		// adjust the attack time so backward reconciliation will work
+		player->attackTime -= player->pers.latentSnaps * (1000 / sv_fps.integer);
+	}
+#endif //UNLAGGED_LAGSIMULATION #1
+
+
+#ifdef UNLAGGED_TRUEPING
+	// make sure the true ping is over 0 - with cl_timenudge it can be less
+	if ( player->pers.realPing < 0 ) {
+		player->pers.realPing = 0;
+	}
+#endif //UNLAGGED_TRUEPING
+
+
 	msec = ucmd->serverTime - player->ps.commandTime;
 	// following others may result in bad times, but we still want
 	// to check for follow toggles
@@ -935,12 +1048,22 @@ void PlayerThink_real( gentity_t *ent ) {
 	if ( ent->player->ps.eventSequence != oldEventSequence ) {
 		ent->eventTime = level.time;
 	}
+
+#ifdef UNLAGGED_SMOOTHCLIENTS //#2
+	// clients no longer do extrapolation if cg_smoothClients is 1, because
+	// skip correction is all handled server-side now
+	// since that's the case, it makes no sense to store the extra info
+	// in the client's snapshot entity, so let's save a little bandwidth
+	BG_PlayerStateToEntityState( &ent->player->ps, &ent->s, qtrue );
+#else
 	if (g_smoothClients.integer) {
 		BG_PlayerStateToEntityStateExtraPolate( &ent->player->ps, &ent->s, ent->player->ps.commandTime, qtrue );
 	}
 	else {
 		BG_PlayerStateToEntityState( &ent->player->ps, &ent->s, qtrue );
 	}
+#endif //UNLAGGED_SMOOTHCLIENTS #2
+
 	SendPendingPredictableEvents( &ent->player->ps );
 
 	if ( !( ent->player->ps.eFlags & EF_FIRING ) ) {
@@ -1017,9 +1140,13 @@ void PlayerThink( int playerNum ) {
 	ent = g_entities + playerNum;
 	trap_GetUsercmd( playerNum, &ent->player->pers.cmd );
 
+#ifdef UNLAGGED_SMOOTHCLIENTS //#1
+	// this is handled differently now
+#else
 	// mark the time we got info, so we can display the
 	// phone jack if they don't get any for a while
 	ent->player->lastCmdTime = level.time;
+#endif //UNLAGGED_SMOOTHCLIENTS #1
 
 	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
 		PlayerThink_real( ent );
@@ -1094,6 +1221,10 @@ while a slow client may have multiple PlayerEndFrame between PlayerThink.
 void PlayerEndFrame( gentity_t *ent ) {
 	int			i;
 
+#ifdef UNLAGGED_SMOOTHCLIENTS //#1
+	int frames;
+#endif //UNLAGGED_SMOOTHCLIENTS #1
+
 	if ( ent->player->sess.sessionTeam == TEAM_SPECTATOR ) {
 		SpectatorPlayerEndFrame( ent );
 		return;
@@ -1147,25 +1278,68 @@ void PlayerEndFrame( gentity_t *ent ) {
 	// apply all the damage taken this frame
 	P_DamageFeedback (ent);
 
+#ifdef UNLAGGED_SMOOTHCLIENTS //#1
+	// this is handled differently now
+#else
 	// add the EF_CONNECTION flag if we haven't gotten commands recently
 	if ( level.time - ent->player->lastCmdTime > 1000 ) {
 		ent->player->ps.eFlags |= EF_CONNECTION;
 	} else {
 		ent->player->ps.eFlags &= ~EF_CONNECTION;
 	}
+#endif //UNLAGGED_SMOOTHCLIENTS #1
 
 	ent->player->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
 
 	G_SetPlayerSound (ent);
 
-	// set the latest infor
+#ifdef UNLAGGED_SMOOTHCLIENTS //#2
+	// clients no longer do extrapolation if cg_smoothClients is 1, because
+	// skip correction is all handled server-side now
+	// since that's the case, it makes no sense to store the extra info
+	// in the client's snapshot entity, so let's save a little bandwidth
+	BG_PlayerStateToEntityState( &ent->player->ps, &ent->s, qtrue );
+#else
+	// set the latest information
 	if (g_smoothClients.integer) {
 		BG_PlayerStateToEntityStateExtraPolate( &ent->player->ps, &ent->s, ent->player->ps.commandTime, qtrue );
 	}
 	else {
 		BG_PlayerStateToEntityState( &ent->player->ps, &ent->s, qtrue );
 	}
+#endif //UNLAGGED_SMOOTHCLIENTS #2
+
 	SendPendingPredictableEvents( &ent->player->ps );
+
+#ifdef UNLAGGED_SMOOTHCLIENTS //#1
+	// mark as not missing updates initially
+	ent->player->ps.eFlags &= ~EF_CONNECTION;
+
+	// see how many frames the client has missed
+	frames = level.framenum - ent->player->lastUpdateFrame - 1;
+
+	// don't extrapolate more than two frames
+	if ( frames > 2 ) {
+		frames = 2;
+
+		// if they missed more than two in a row, show the phone jack
+		ent->player->ps.eFlags |= EF_CONNECTION;
+		ent->s.eFlags |= EF_CONNECTION;
+	}
+
+	// did the client miss any frames?
+	if ( frames > 0 && g_smoothClients.integer ) {
+		// yep, missed one or more, so extrapolate the player's movement
+		G_PredictPlayerMove( ent, (float)frames / sv_fps.integer );
+		// save network bandwidth
+		SnapVector( ent->s.pos.trBase );
+	}
+#endif //UNLAGGED_SMOOTHCLIENTS #1
+
+#ifdef UNLAGGED_BACKWARDRECONCILIATION //#1
+	// store the client's position for backward reconciliation later
+	G_StoreHistory( ent );
+#endif //UNLAGGED_BACKWARDRECONCILIATION #1
 
 	// set the bit for the reachability area the player is currently in
 //	i = trap_AAS_PointReachabilityAreaIndex( ent->player->ps.origin );
