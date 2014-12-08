@@ -353,7 +353,6 @@ void UI_CinematicsMenu_f( void ) {
 	int		n;
 
 	n = atoi( CG_Argv( 1 ) );
-	UI_VideosMenu();
 	UI_CinematicsMenu();
 	Menu_SetCursorToItem( &cinematicsMenuInfo.menu, cinematicsMenuInfo.menu.items[n + 3] );
 }

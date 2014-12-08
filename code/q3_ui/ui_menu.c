@@ -43,12 +43,12 @@ MAIN MENU
 #define ID_SINGLEPLAYER			10
 #define ID_MULTIPLAYER			11
 #define ID_SETUP				12
-#define ID_VIDEOS				13
+#define ID_DEMOS				13
+#define ID_CINEMATICS			14
 #ifndef MISSIONPACK
-#define ID_TEAMARENA			14
+#define ID_TEAMARENA			15
 #endif
-#define ID_MODS					15
-#define ID_CREDITS				16
+#define ID_MODS					16
 #define ID_EXIT					17
 
 #define MAIN_BANNER_MODEL				"models/mapobjects/banner/banner5.md3"
@@ -61,12 +61,12 @@ typedef struct {
 	menutext_s		singleplayer;
 	menutext_s		multiplayer;
 	menutext_s		setup;
-	menutext_s		videos;
+	menutext_s		demos;
+	menutext_s		cinematics;
 #ifndef MISSIONPACK
 	menutext_s		teamArena;
 #endif
 	menutext_s		mods;
-	menutext_s		credits;
 	menutext_s		exit;
 
 	qhandle_t		bannerModel;
@@ -91,7 +91,8 @@ static void MainMenu_ExitAction( qboolean result ) {
 	if( !result ) {
 		return;
 	}
-	trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
+	UI_PopMenu();
+	UI_CreditMenu();
 }
 
 
@@ -119,16 +120,16 @@ void Main_MenuEvent (void* ptr, int event) {
 		UI_SetupMenu();
 		break;
 
-	case ID_VIDEOS:
-		UI_VideosMenu();
+	case ID_DEMOS:
+		UI_DemosMenu();
+		break;
+
+	case ID_CINEMATICS:
+		UI_CinematicsMenu();
 		break;
 
 	case ID_MODS:
 		UI_ModsMenu();
-		break;
-
-	case ID_CREDITS:
-		UI_CreditMenu();
 		break;
 
 #ifndef MISSIONPACK
@@ -236,9 +237,9 @@ static void Main_MenuDraw( void ) {
 
 	if (uis.demoversion) {
 		UI_DrawProportionalString( 320, 372, "DEMO      FOR MATURE AUDIENCES      DEMO", UI_CENTER|UI_SMALLFONT, color );
-		UI_DrawString( 320, 400, "Chicago: Praise the Darkness      Demo", UI_CENTER|UI_SMALLFONT, color );
+		UI_DrawString( 320, 400, "Quake III Arena(c) 1999-2000, Id Software, Inc.  All Rights Reserved", UI_CENTER|UI_SMALLFONT, color );
 	} else {
-		UI_DrawString( 320, 450, "Chicago: Praise the Darkness      v0.00", UI_CENTER|UI_SMALLFONT, color );
+		UI_DrawString( 320, 450, "Quake III Arena(c) 1999-2000, Id Software, Inc.  All Rights Reserved", UI_CENTER|UI_SMALLFONT, color );
 	}
 }
 
@@ -350,15 +351,26 @@ void UI_MainMenu( void ) {
 	s_main.setup.style						= style;
 
 	y += MAIN_MENU_VERTICAL_SPACING;
-	s_main.videos.generic.type				= MTYPE_PTEXT;
-	s_main.videos.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-	s_main.videos.generic.x					= 320;
-	s_main.videos.generic.y					= y;
-	s_main.videos.generic.id				= ID_VIDEOS;
-	s_main.videos.generic.callback			= Main_MenuEvent; 
-	s_main.videos.string					= "VIDEOS";
-	s_main.videos.color						= text_big_color;
-	s_main.videos.style						= style;
+	s_main.demos.generic.type				= MTYPE_PTEXT;
+	s_main.demos.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_main.demos.generic.x					= 320;
+	s_main.demos.generic.y					= y;
+	s_main.demos.generic.id					= ID_DEMOS;
+	s_main.demos.generic.callback			= Main_MenuEvent; 
+	s_main.demos.string						= "DEMOS";
+	s_main.demos.color						= text_big_color;
+	s_main.demos.style						= style;
+
+	y += MAIN_MENU_VERTICAL_SPACING;
+	s_main.cinematics.generic.type			= MTYPE_PTEXT;
+	s_main.cinematics.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_main.cinematics.generic.x				= 320;
+	s_main.cinematics.generic.y				= y;
+	s_main.cinematics.generic.id			= ID_CINEMATICS;
+	s_main.cinematics.generic.callback		= Main_MenuEvent; 
+	s_main.cinematics.string				= "CINEMATICS";
+	s_main.cinematics.color					= text_big_color;
+	s_main.cinematics.style					= style;
 
 #ifndef MISSIONPACK
 	if ( !uis.demoversion && UI_TeamArenaExists() ) {
@@ -390,17 +402,6 @@ void UI_MainMenu( void ) {
 	}
 
 	y += MAIN_MENU_VERTICAL_SPACING;
-	s_main.credits.generic.type				= MTYPE_PTEXT;
-	s_main.credits.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-	s_main.credits.generic.x				= 320;
-	s_main.credits.generic.y				= y;
-	s_main.credits.generic.id				= ID_CREDITS;
-	s_main.credits.generic.callback			= Main_MenuEvent; 
-	s_main.credits.string					= "CREDITS";
-	s_main.credits.color					= text_big_color;
-	s_main.credits.style					= style;
-
-	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.exit.generic.type				= MTYPE_PTEXT;
 	s_main.exit.generic.flags				= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_main.exit.generic.x					= 320;
@@ -414,7 +415,8 @@ void UI_MainMenu( void ) {
 	Menu_AddItem( &s_main.menu,	&s_main.singleplayer );
 	Menu_AddItem( &s_main.menu,	&s_main.multiplayer );
 	Menu_AddItem( &s_main.menu,	&s_main.setup );
-	Menu_AddItem( &s_main.menu,	&s_main.videos );
+	Menu_AddItem( &s_main.menu,	&s_main.demos );
+	Menu_AddItem( &s_main.menu,	&s_main.cinematics );
 #ifndef MISSIONPACK
 	if (teamArena) {
 		Menu_AddItem( &s_main.menu,	&s_main.teamArena );
@@ -423,7 +425,6 @@ void UI_MainMenu( void ) {
 	if ( !uis.demoversion ) {
 		Menu_AddItem( &s_main.menu,	&s_main.mods );
 	}
-	Menu_AddItem( &s_main.menu,	&s_main.credits );   
 	Menu_AddItem( &s_main.menu,	&s_main.exit );             
 
 	uis.menusp = 0;

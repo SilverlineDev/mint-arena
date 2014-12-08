@@ -101,7 +101,8 @@ static void InGame_QuitAction( qboolean result ) {
 	if( !result ) {
 		return;
 	}
-	trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
+	UI_PopMenu();
+	UI_CreditMenu();
 }
 
 

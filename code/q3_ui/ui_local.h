@@ -357,12 +357,6 @@ extern void UI_SetupMenu_Cache( void );
 extern void UI_SetupMenu(void);
 
 //
-// ui_videos.c
-//
-extern void UI_VideosMenu_Cache( void );
-extern void UI_VideosMenu(void);
-
-//
 // ui_team.c
 //
 extern void UI_TeamMainMenu( int localPlayerNum );

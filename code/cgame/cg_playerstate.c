@@ -97,7 +97,8 @@ CG_DamageFeedback
 void CG_DamageFeedback( int yawByte, int pitchByte, int damage ) {
 	float		left, front, up;
 	float		kick;
-	int			armor;
+	int			health;
+	float		scale;
 	vec3_t		dir;
 	vec3_t		angles;
 	float		dist;
@@ -106,13 +107,19 @@ void CG_DamageFeedback( int yawByte, int pitchByte, int damage ) {
 	// show the attacking player's head and name in corner
 	cg.cur_lc->attackerTime = cg.time;
 
-	// if you have armor, there is no viewkick
-	armor = cg.cur_ps->stats[STAT_ARMOR];
-	if ( armor <= 0 ) {
-		kick = 50;
+	// the lower on health you are, the greater the view kick will be
+	health = cg.cur_ps->stats[STAT_HEALTH];
+	if ( health < 40 ) {
+		scale = 1;
 	} else {
-		kick = 0;
+		scale = 40.0 / health;
 	}
+	kick = damage * scale;
+
+	if (kick < 5)
+		kick = 5;
+	if (kick > 10)
+		kick = 10;
 
 	// if yaw and pitch are both 255, make the damage always centered (falling, etc)
 	if ( yawByte == 255 && pitchByte == 255 ) {
@@ -174,7 +181,7 @@ void CG_DamageFeedback( int yawByte, int pitchByte, int damage ) {
 	if ( kick > 10 ) {
 		kick = 10;
 	}
-	cg.cur_lc->damageValue = damage;
+	cg.cur_lc->damageValue = kick;
 	cg.cur_lc->v_dmg_time = cg.time + DAMAGE_TIME;
 	cg.cur_lc->damageTime = cg.snap->serverTime;
 }

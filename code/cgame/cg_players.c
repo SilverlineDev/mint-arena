@@ -128,7 +128,7 @@ static qboolean	CG_ParseAnimationFile( const char *filename, playerInfo_t *pi ) 
 
 	pi->footsteps = FOOTSTEP_NORMAL;
 	VectorClear( pi->headOffset );
-	pi->gender = GENDER_NEUTER;
+	pi->gender = GENDER_MALE;
 	pi->fixedlegs = qfalse;
 	pi->fixedtorso = qfalse;
 
@@ -174,12 +174,10 @@ static qboolean	CG_ParseAnimationFile( const char *filename, playerInfo_t *pi ) 
 			}
 			if ( token[0] == 'f' || token[0] == 'F' ) {
 				pi->gender = GENDER_FEMALE;
-			} else if ( token[0] == 'm' || token[0] == 'M' ) {
-				pi->gender = GENDER_MALE;
-			} else if ( token[0] == 'o' || token[0] == 'O' ) {
-				pi->gender = GENDER_OTHER;
-			} else {
+			} else if ( token[0] == 'n' || token[0] == 'N' ) {
 				pi->gender = GENDER_NEUTER;
+			} else {
+				pi->gender = GENDER_MALE;
 			}
 			continue;
 		} else if ( !Q_stricmp( token, "fixedlegs" ) ) {
@@ -858,9 +856,9 @@ static void CG_LoadPlayerInfo( int playerNum, playerInfo_t *pi ) {
 	// sounds
 	dir = pi->modelName;
 	if (cgs.gametype >= GT_TEAM) {
-		fallback = (pi->gender == GENDER_MALE) ? DEFAULT_TEAM_MODEL_MALE : DEFAULT_TEAM_MODEL_FEMALE;
+		fallback = (pi->gender == GENDER_FEMALE) ? DEFAULT_TEAM_MODEL_FEMALE : DEFAULT_TEAM_MODEL_MALE;
 	} else {
-		fallback = (pi->gender == GENDER_MALE) ? DEFAULT_MODEL_MALE : DEFAULT_MODEL_FEMALE;
+		fallback = (pi->gender == GENDER_FEMALE) ? DEFAULT_MODEL_FEMALE : DEFAULT_MODEL_MALE;
 	}
 
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS ; i++ ) {

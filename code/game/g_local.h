@@ -285,11 +285,8 @@ struct gplayer_s {
 									// we can't just use pers.lastCommand.time, because
 									// of the g_sycronousclients case
 	int			buttons;
-	int			buttons2;
 	int			oldbuttons;
-	int			oldbuttons2;
 	int			latched_buttons;
-	int			latched_buttons2;
 
 	vec3_t		oldOrigin;
 

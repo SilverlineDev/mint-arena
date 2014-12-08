@@ -354,9 +354,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 	}
 
 	player->oldbuttons = player->buttons;
-	player->oldbuttons2 = player->buttons2;
 	player->buttons = ucmd->buttons;
-	player->buttons2 = ucmd->buttons2;
 
 	// attack button cycles through spectators
 	if ( ( player->buttons & BUTTON_ATTACK ) && ! ( player->oldbuttons & BUTTON_ATTACK ) ) {
@@ -523,9 +521,7 @@ void PlayerIntermissionThink( gplayer_t *player ) {
 
 	// swap and latch button actions
 	player->oldbuttons = player->buttons;
-	player->oldbuttons2 = player->buttons2;
 	player->buttons = player->pers.cmd.buttons;
-	player->buttons2 = player->pers.cmd.buttons2;
 	if ( player->buttons & ( BUTTON_ATTACK | BUTTON_USE_HOLDABLE ) & ( player->oldbuttons ^ player->buttons ) ) {
 		// this used to be an ^1 but once a player says ready, it should stick
 		player->readyToExit = 1;
@@ -545,6 +541,7 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 	int		i;
 	int		event;
 	gplayer_t *player;
+	int		damage;
 	vec3_t	origin, angles;
 
 	player = ent->player;
@@ -556,6 +553,23 @@ void PlayerEvents( gentity_t *ent, int oldEventSequence ) {
 		event = player->ps.events[ i & (MAX_PS_EVENTS-1) ];
 
 		switch ( event ) {
+		case EV_FALL_MEDIUM:
+		case EV_FALL_FAR:
+			if ( ent->s.eType != ET_PLAYER ) {
+				break;		// not in the player model
+			}
+			if ( g_dmflags.integer & DF_NO_FALLING ) {
+				break;
+			}
+			if ( event == EV_FALL_FAR ) {
+				damage = 10;
+			} else {
+				damage = 5;
+			}
+			ent->pain_debounce_time = level.time + 200;	// no normal pain sound
+			G_Damage (ent, NULL, NULL, NULL, NULL, damage, 0, MOD_FALLING);
+			break;
+
 		case EV_FIRE_WEAPON:
 			FireWeapon( ent );
 			break;
@@ -900,16 +914,22 @@ void PlayerThink_real( gentity_t *ent ) {
 	VectorCopy( player->ps.origin, player->oldOrigin );
 
 #ifdef MISSIONPACK
-	if (level.intermissionQueued != 0 && g_singlePlayer.integer) {
-		if ( level.time - level.intermissionQueued >= 1000  ) {
-			if ( level.time - level.intermissionQueued >= 2000 && level.time - level.intermissionQueued <= 2500 ) {
-				trap_Cmd_ExecuteText( EXEC_APPEND, "centerview\n");
+		if (level.intermissionQueued != 0 && g_singlePlayer.integer) {
+			if ( level.time - level.intermissionQueued >= 1000  ) {
+				pm.cmd.buttons = 0;
+				pm.cmd.forwardmove = 0;
+				pm.cmd.rightmove = 0;
+				pm.cmd.upmove = 0;
+				if ( level.time - level.intermissionQueued >= 2000 && level.time - level.intermissionQueued <= 2500 ) {
+					trap_Cmd_ExecuteText( EXEC_APPEND, "centerview\n");
+				}
+				ent->player->ps.pm_type = PM_SPINTERMISSION;
 			}
-			ent->player->ps.pm_type = PM_SPINTERMISSION;
 		}
-	}
+		Pmove (&pm);
+#else
+		Pmove (&pm);
 #endif
-	Pmove (&pm);
 
 	// save results of pmove
 	if ( ent->player->ps.eventSequence != oldEventSequence ) {
@@ -958,11 +978,8 @@ void PlayerThink_real( gentity_t *ent ) {
 
 	// swap and latch button actions
 	player->oldbuttons = player->buttons;
-	player->oldbuttons2 = player->buttons2;
 	player->buttons = ucmd->buttons;
-	player->buttons2 = ucmd->buttons2;
 	player->latched_buttons |= player->buttons & ~player->oldbuttons;
-	player->latched_buttons2 |= player->buttons2 & ~player->oldbuttons2;
 
 	// check for respawning
 	if ( player->ps.stats[STAT_HEALTH] <= 0 ) {

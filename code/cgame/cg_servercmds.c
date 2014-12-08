@@ -521,7 +521,6 @@ static void CG_MapRestart( void ) {
 	for (i = 0; i < CG_MaxSplitView(); i++) {
 		cg.localPlayers[i].rewardTime = 0;
 		cg.localPlayers[i].rewardStack = 0;
-		cg.localPlayers[i].renderingThirdPerson = qfalse;
 
 		trap_Cvar_SetValue( Com_LocalPlayerCvarName(i, "cg_thirdPerson"), 0 );
 	}
@@ -822,10 +821,10 @@ voiceChatList_t *CG_VoiceChatListForPlayer( int playerNum ) {
 				}
 			}
 		}
-		// fall back to female gender because we don't have neuter in the mission pack
-		if (gender == GENDER_FEMALE)
+		// fall back to male gender because we don't have neuter in the mission pack
+		if (gender == GENDER_MALE)
 			break;
-		gender = GENDER_FEMALE;
+		gender = GENDER_MALE;
 	}
 	// store this head model with voice chat for future reference
 	for ( j = 0; j < MAX_HEADMODELS; j++ ) {
